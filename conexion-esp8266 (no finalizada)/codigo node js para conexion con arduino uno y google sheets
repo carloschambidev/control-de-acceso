@@ -1,0 +1,86 @@
+const app = express();
+app.use(express.json());
+
+app.post("/enviar-datos", async (req, res) => {
+  try {
+    const data = req.body;                    // Datos enviados por el Arduino
+
+
+
+    // Autenticación con la API de Google Sheets
+
+    await client.authorize();
+    const sheets = google.sheets({ version: "v4", auth: client });
+
+
+
+    // Agregar los datos a la hoja de cálculo
+
+    await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: "A1",                                // Rango donde deseas agregar los datos
+      valueInputOption: "RAW",
+      insertDataOption: "INSERT_ROWS",
+      resource: {
+        values: [[data.value1, data.value2]]       // Valores enviados desde el Arduino
+      }
+    });
+
+    res.status(200).send("Datos agregados a Google Sheets");
+  } catch (error) {
+    console.error("Error:", error);
+    res.status(500).send("Error al agregar los datos");
+  }
+});
+
+
+
+
+// Inicia el servidor
+
+const port = 8080;
+app.listen(port, () => {
+  console.log(`Servidor en funcionamiento en el puerto ${port}`);
+});
+
+
+
+
+// Configuración del Arduino
+
+board.on("ready", () => {
+  const wifi = new five.ESP8266({
+    port: "COMx"                          // Puerto de comunicación serial del Arduino
+  });
+
+
+
+
+  // Configuración del módulo WiFi
+
+  wifi.on("open", () => {
+    console.log("Conexión WiFi establecida");
+
+
+
+
+    // Código para enviar los datos desde el Arduino
+
+    const dataToSend = {
+      value1: 123,
+      value2: 456
+    };
+
+
+
+    // Envía los datos al servidor Node.js
+
+    axios.post("http://localhost:8080/enviar-datos", dataToSend)
+      .then(response => {
+        console.log(response.data);
+      })
+      .catch(error => {
+        console.error("Error al enviar datos:", error);
+      });
+  });
+});
